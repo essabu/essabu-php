@@ -12,8 +12,21 @@ use Essabu\Common\Exception\RateLimitException;
 use Essabu\Common\Exception\ValidationException;
 use Essabu\Essabu;
 
+/**
+ * Initialize the SDK with your API key and tenant ID. This example demonstrates the
+ * exception hierarchy by catching errors from most specific to most general.
+ */
 $essabu = new Essabu('your-api-key', 'your-tenant-id');
 
+/**
+ * Attempt to create an employee with missing required fields to trigger a ValidationException.
+ * The SDK maps each HTTP error status to a specific exception class. Catch ValidationException
+ * (422) to access field-level errors via getErrors(). Catch AuthenticationException (401) when
+ * the API key is invalid. Catch AuthorizationException (403) for insufficient permissions.
+ * Catch NotFoundException (404) when a referenced resource does not exist. Catch
+ * RateLimitException (429) with getRetryAfter() for the wait time. The base EssabuException
+ * catches all other API errors and exposes getHttpStatusCode() and getContext() for debugging.
+ */
 try {
     $employee = $essabu->hr->employees->create([
         'firstName' => 'Jean',

@@ -4,6 +4,8 @@ The Payment module handles payment processing, subscriptions, lending, KYC verif
 
 ## Client Access
 
+Access the Payment module through the main Essabu client. The `$payment` property exposes all payment sub-APIs as magic properties. You must first initialize the SDK with a valid API key. Returns the `PaymentClient` instance.
+
 ```php
 $essabu = new EssabuClient('your-api-key');
 $payment = $essabu->payment;
@@ -38,6 +40,8 @@ Additional methods:
 | `capture(string $id, array $data) -> array` | `POST /api/payment/payment-intents/{id}/capture` | Capture payment |
 | `cancel(string $id) -> array` | `POST /api/payment/payment-intents/{id}/cancel` | Cancel intent |
 
+Create a payment intent by specifying the `amount` (in smallest currency unit), `currency`, and `customerId`. The intent starts in a `requires_confirmation` status. Call `confirm` to authorize the payment and `capture` to finalize it. Returns the intent with its current `status`. Throws `ValidationException` if the amount is invalid or currency is unsupported, or a 409 `Conflict` if the intent has already been confirmed.
+
 ```php
 // Create and confirm a payment
 $intent = $payment->paymentIntents->create([
@@ -59,6 +63,8 @@ Additional methods:
 | `cancel(string $id, array $data) -> array` | `POST /api/payment/subscriptions/{id}/cancel` | Cancel subscription |
 | `resume(string $id) -> array` | `POST /api/payment/subscriptions/{id}/resume` | Resume subscription |
 | `changePlan(string $id, array $data) -> array` | `POST /api/payment/subscriptions/{id}/change-plan` | Change plan |
+
+Create a subscription by providing a `planId` and `customerId`. Change the plan at any time by passing the new `planId`. Cancel with an optional `reason`, and resume a cancelled subscription before its period ends. Returns the subscription with its updated status. Throws `NotFoundException` if the plan or subscription ID is invalid, or `ValidationException` if the subscription has already expired.
 
 ```php
 $sub = $payment->subscriptions->create([
@@ -82,6 +88,8 @@ $payment->subscriptions->resume($subId);
 | `CollateralApi` | `payment/collaterals` |
 | `FinancialAccountApi` | `payment/financial-accounts` |
 | `ReportApi` | `payment/reports` |
+
+Create a refund by providing the `transactionId`, `amount` to refund, and a `reason`. Create a KYC profile by linking it to a `customerId` and specifying the `documentType` (e.g., `passport`, `national_id`). Returns the created resource with a generated `id`. Throws `ValidationException` if the refund amount exceeds the original transaction, or `NotFoundException` if the transaction ID is invalid.
 
 ```php
 // Create a refund

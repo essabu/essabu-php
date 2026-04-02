@@ -4,6 +4,8 @@ The Project module provides project management capabilities including projects, 
 
 ## Client Access
 
+Access the Project module through the main Essabu client. The `$project` property exposes all project sub-APIs as magic properties. You must first initialize the SDK with a valid API key. Returns the `ProjectClient` instance.
+
 ```php
 $essabu = new EssabuClient('your-api-key');
 $project = $essabu->project;
@@ -42,6 +44,8 @@ $project = $essabu->project;
 | `MilestoneApi` | `project/milestones` |
 | `ResourceAllocationApi` | `project/resource-allocations` |
 | `ReportApi` | `project/reports` |
+
+Create a project by providing a `name`, `startDate`, `endDate`, and optional `budget`. Create tasks within a project by specifying the `projectId`, `title`, and an `assigneeId`. Add comments to tasks via the separate `taskComments` API using the `taskId` and `content`. Set milestones with a `projectId`, `name`, and `dueDate`. Allocate team members by specifying `projectId`, `userId`, `hoursPerWeek`, and a `startDate`. Use `reports->list()` to retrieve available project reports. All methods return the created resource as an associative array. Throws `ValidationException` if required fields are missing, or a 422 error if the end date is before the start date.
 
 ```php
 // Create a project

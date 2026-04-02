@@ -4,6 +4,8 @@ The Identity module handles authentication, user management, roles, permissions,
 
 ## Client Access
 
+Access the Identity module through the main Essabu client. The `$identity` property exposes all identity sub-APIs as magic properties. You must first initialize the SDK with a valid API key. Returns the `IdentityClient` instance.
+
 ```php
 $essabu = new EssabuClient('your-api-key');
 $identity = $essabu->identity;
@@ -39,6 +41,8 @@ Base path: `identity/auth`
 | `resetPassword(array $data) -> array` | `POST /api/identity/auth/reset-password` | Reset password |
 | `verifyEmail(string $token) -> array` | `POST /api/identity/auth/verify-email` | Verify email |
 
+Log in by passing `email` and `password` to receive an access token and a refresh token. Use the refresh token to obtain a new access token without re-entering credentials. For password recovery, call `forgotPassword` with the user's email to trigger a reset email, then `resetPassword` with the token and new password. Returns token pairs on login/refresh. Throws `AuthenticationException` if credentials are invalid, or `RateLimitException` after too many failed login attempts.
+
 ```php
 // Login
 $tokens = $identity->auth->login(['email' => 'user@example.com', 'password' => 'secret']);
@@ -66,6 +70,8 @@ All of these provide the inherited `list`, `get`, `create`, `update`, `delete` m
 | `ProfileApi` | `identity/profile` |
 | `SessionApi` | `identity/sessions` |
 | `ApiKeyApi` | `identity/api-keys` |
+
+Create a user by providing `email`, `firstName`, `lastName`, and a `roleId`. Create an API key by specifying a `name` and an array of `scopes` (e.g., `read`, `write`). List active sessions to audit connected devices. Returns the created resource with a generated `id`. Throws `ValidationException` if required fields are missing, or a 409 `Conflict` if the email or API key name already exists.
 
 ```php
 // Create a user

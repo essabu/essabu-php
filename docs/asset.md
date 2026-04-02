@@ -4,6 +4,8 @@ The Asset module provides asset management including fixed assets, vehicles, mai
 
 ## Client Access
 
+Access the Asset module through the main Essabu client. The `$asset` property exposes all asset sub-APIs as magic properties. You must first initialize the SDK with a valid API key. Returns the `AssetClient` instance.
+
 ```php
 $essabu = new EssabuClient('your-api-key');
 $asset = $essabu->asset;
@@ -44,6 +46,8 @@ $asset = $essabu->asset;
 | `DepreciationApi` | `asset/depreciations` |
 | `FuelLogApi` | `asset/fuel-logs` |
 | `TripLogApi` | `asset/trip-logs` |
+
+Create a fixed asset by providing `name`, `category`, `purchaseDate`, `purchasePrice`, `depreciationMethod` (e.g., `straight-line`), and `usefulLifeMonths`. Register a vehicle with `make`, `model`, `year`, `licensePlate`, and initial `mileage`. Log maintenance events by linking them to an `assetId` with the maintenance `type`, `date`, and `cost`. Schedule recurring maintenance by specifying `intervalDays` and `nextDueDate`. Track depreciation via the paginated list. Record fuel purchases with `vehicleId`, `liters`, `costPerLiter`, and `odometer` reading. Log trips with start/end odometer readings and timestamps. All methods return the created resource as an associative array. Throws `ValidationException` if required fields are missing, or a 409 `Conflict` for duplicate license plates.
 
 ```php
 // Create an asset
