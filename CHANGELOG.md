@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Initial release of the Essabu PHP SDK
-- Unified Stripe-like API: `new Essabu($apiKey, $tenantId)`
+- Unified API: `new Essabu($apiKey, $tenantId)`
 - Lazy module initialization via `__get` magic
 - **HR Module**: Employees, Contracts, Leaves, Payroll, Shifts, Departments, Attendance, Recruitment, Performance, Training, Documents, Benefits, Loans, Timesheets, Skills, Onboarding, Expenses, Disciplinary, Config, Reports, Webhooks, History
 - **Accounting Module**: Accounts, Invoices, Payments, Quotes, Credit Notes, Journals, Wallets, Tax Rates, Currencies, Fiscal Years, Insurance, Inventory, Coupons, Reports, Config, Webhooks
