@@ -54,11 +54,15 @@ PHP 8.2+ with strict typing throughout.
 
 ## Installation
 
+Install the SDK via Composer. This pulls in Guzzle and all required dependencies automatically. Requires PHP 8.2 or higher.
+
 ```bash
 composer require essabu/essabu
 ```
 
 ## Quick Start
+
+The following example demonstrates how to initialize the SDK and perform basic operations across all eight modules. Pass your API key and tenant ID to the constructor. Each module is accessed as a property on the client, and each sub-API is accessed as a property on the module. All create methods return the created resource as an associative array with a generated `id`. Throws `AuthenticationException` if the API key is invalid, or `ValidationException` if required fields are missing.
 
 ```php
 use Essabu\Essabu;
@@ -113,6 +117,8 @@ $vehicle = $essabu->asset->vehicles->create([
 
 ## Configuration
 
+Customize the SDK behavior by passing an options array as the third constructor argument. You can override the base URL (useful for staging environments), adjust the request timeout, set the number of automatic retries for transient errors, and specify the API version. All options are optional and default to production-ready values.
+
 ```php
 $essabu = new Essabu('api-key', 'tenant-id', [
     'baseUrl'    => 'https://api.essabu.com',  // default
@@ -133,7 +139,7 @@ $essabu = new Essabu('api-key', 'tenant-id', [
 
 ### Laravel
 
-Register as a singleton in `AppServiceProvider`:
+Register the Essabu client as a singleton in your `AppServiceProvider`. This ensures a single client instance is reused across all service injections. The API key and tenant ID are read from your `config/services.php` configuration.
 
 ```php
 $this->app->singleton(Essabu::class, fn () => new Essabu(
@@ -143,7 +149,7 @@ $this->app->singleton(Essabu::class, fn () => new Essabu(
 ));
 ```
 
-Add to `config/services.php`:
+Add the Essabu service credentials to `config/services.php`. The values are read from environment variables so that secrets are never committed to version control.
 
 ```php
 'essabu' => [
@@ -153,7 +159,7 @@ Add to `config/services.php`:
 ],
 ```
 
-Inject anywhere:
+Inject the `Essabu` client into any service or controller via constructor injection. Laravel resolves the singleton automatically. All module methods are available through the fluent property chain.
 
 ```php
 class InvoiceService
@@ -169,7 +175,7 @@ class InvoiceService
 
 ### Symfony
 
-Register in `config/services.yaml`:
+Register the Essabu client as a service in `config/services.yaml`. The API key and tenant ID are injected from environment variables. Optional parameters like `baseUrl` and `timeout` can be configured under the `$options` argument.
 
 ```yaml
 services:
@@ -316,7 +322,7 @@ Plus: Resource Allocations.
 
 ## Pagination
 
-Use `PageRequest` to control pagination, filtering, and sorting:
+Use `PageRequest` to control pagination, filtering, and sorting on any `list` method. Pass the page number, items per page, an optional search string, sort field, sort direction, and key-value filters. The returned `PageResponse` object contains `page`, `totalPages`, `totalItems`, and the `items` array. Throws `BadRequestException` if invalid filter keys are provided.
 
 ```php
 use Essabu\Common\Model\PageRequest;
@@ -340,7 +346,7 @@ foreach ($page->items as $employee) {
 }
 ```
 
-Iterate all pages:
+To iterate through all pages of a paginated result set, increment the page counter in a loop until you reach `totalPages`. Each iteration fetches one page of results. This pattern works with any `list` method across all modules.
 
 ```php
 $page = 1;
@@ -355,7 +361,7 @@ do {
 
 ## Error Handling
 
-The SDK maps HTTP errors to specific exception classes:
+The SDK maps every HTTP error status to a specific exception class. Catch them from most specific to most general. `ValidationException` provides field-level errors via `getErrors()`. `RateLimitException` includes a `getRetryAfter()` method indicating how many seconds to wait. The base `EssabuException` exposes `getHttpStatusCode()` and `getContext()` for debugging.
 
 ```php
 use Essabu\Common\Exception\{
@@ -414,6 +420,8 @@ The SDK automatically retries **429** (rate limit) and **5xx** (server error) re
 
 ### Laravel
 
+Handle incoming Essabu webhooks in a Laravel controller. Verify the request signature using the `X-Essabu-Signature` header and your webhook secret. Parse the payload to extract the event type and data, then route to the appropriate handler. Returns a 401 response if the signature is invalid. The `EssabuWebhook::verify()` method uses HMAC-SHA256 to validate payload integrity.
+
 ```php
 use Essabu\Webhook\EssabuWebhook;
 
@@ -443,6 +451,8 @@ class WebhookController extends Controller
 ```
 
 ### Symfony
+
+Handle incoming Essabu webhooks in a Symfony controller. The same verification and parsing logic applies. Extract the payload from the `Request` object, verify the signature header against your webhook secret stored in an environment variable, then process the event. Returns a 401 `Response` if verification fails.
 
 ```php
 #[Route('/webhooks/essabu', methods: ['POST'])]
@@ -479,12 +489,14 @@ See the full [examples/](examples/) directory and the [Wiki Examples page](https
 
 ## Testing
 
+Run the test suite using PHPUnit. All tests are located in the `tests/` directory and cover unit, integration, and mock-based HTTP scenarios.
+
 ```bash
 composer install
 ./vendor/bin/phpunit
 ```
 
-Static analysis:
+Run PHPStan static analysis at level 5 to check for type errors, undefined methods, and other code quality issues across the `src/` directory.
 
 ```bash
 ./vendor/bin/phpstan analyse src --level 5

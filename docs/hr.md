@@ -4,6 +4,8 @@ The HR module provides comprehensive human resource management including employe
 
 ## Client Access
 
+Access the HR module through the main Essabu client. The `$hr` property exposes all HR sub-APIs as magic properties. You must first initialize the SDK with a valid API key and tenant ID. Returns the `HrClient` instance.
+
 ```php
 $essabu = new EssabuClient('your-api-key');
 $hr = $essabu->hr;
@@ -64,6 +66,8 @@ Additional methods:
 | `reinstate(string $id) -> array` | `POST /api/hr/employees/{id}/reinstate` | Reinstate employee |
 | `getDocuments(string $id) -> array` | `GET /api/hr/employees/{id}/documents` | Get employee documents |
 
+List employees with optional pagination via `PageRequest`, create a new employee by providing `firstName`, `lastName`, and `email`, terminate an employee by passing the termination date and reason, or reinstate a previously terminated employee. The `list` method returns a `PageResponse`; all other methods return the employee as an associative array. Throws `ValidationException` if required fields are missing, or `NotFoundException` if the employee ID does not exist.
+
 ```php
 // List employees
 $employees = $hr->employees->list(new PageRequest(page: 1, perPage: 20));
@@ -94,6 +98,8 @@ Additional methods:
 | `reject(string $id, array $data) -> array` | `POST /api/hr/leaves/{id}/reject` | Reject leave request |
 | `getBalance(string $employeeId) -> array` | `GET /api/hr/employees/{id}/leave-balance` | Get leave balance |
 
+Approve or reject a pending leave request by its ID. Rejection requires a `reason` in the data array. Use `getBalance` to retrieve the remaining leave days for a given employee. Returns the updated leave request or the balance breakdown. Throws `ValidationException` if the leave balance is exceeded, or `NotFoundException` if the leave or employee ID is invalid.
+
 ```php
 $hr->leaves->approve($leaveId);
 $hr->leaves->reject($leaveId, ['reason' => 'Insufficient notice']);
@@ -111,6 +117,8 @@ Additional methods:
 | `calculate(string $id) -> array` | `POST /api/hr/payrolls/{id}/calculate` | Calculate payroll |
 | `approve(string $id) -> array` | `POST /api/hr/payrolls/{id}/approve` | Approve payroll |
 | `generatePayslips(string $id) -> array` | `POST /api/hr/payrolls/{id}/payslips` | Generate payslips |
+
+Create a payroll run by specifying the `month` and `departmentId`, then calculate it to compute salaries and deductions, approve it to lock the amounts, and finally generate individual payslips for each employee. Each step returns the updated payroll object. Throws `ValidationException` if the payroll has already been approved or if calculation fails due to missing employee data.
 
 ```php
 $payroll = $hr->payrolls->create(['month' => '2026-03', 'departmentId' => $deptId]);

@@ -4,6 +4,8 @@ The Accounting module covers chart of accounts, invoicing, payments, wallets, jo
 
 ## Client Access
 
+Access the Accounting module through the main Essabu client. The `$accounting` property exposes all accounting sub-APIs as magic properties. You must first initialize the SDK with a valid API key. Returns the `AccountingClient` instance.
+
 ```php
 $essabu = new EssabuClient('your-api-key');
 $accounting = $essabu->accounting;
@@ -56,6 +58,8 @@ Additional methods:
 | `markAsPaid(string $id, array $data) -> array` | `POST /api/accounting/invoices/{id}/mark-paid` | Mark as paid |
 | `downloadPdf(string $id) -> array` | `GET /api/accounting/invoices/{id}/pdf` | Download PDF |
 
+Demonstrates the full invoicing workflow: create an invoice by providing a `customerId` and an array of line items with descriptions and amounts, then finalize it to lock the contents, send it by email to the customer, mark it as paid with a payment date, and download the PDF. The invoice starts in DRAFT status after creation and transitions through FINALIZED, SENT, and PAID. Throws `ValidationException` if items are empty, or `NotFoundException` if the invoice ID is invalid.
+
 ```php
 // Full invoicing workflow
 $invoice = $accounting->invoices->create([
@@ -87,6 +91,8 @@ $pdf = $accounting->invoices->downloadPdf($invoiceId);
 | `CouponApi` | `accounting/coupons` |
 | `ConfigApi` | `accounting/config` |
 | `WebhookApi` | `accounting/webhooks` |
+
+Create a journal entry by passing a date and an array of debit/credit lines that must balance. Each line requires an `accountId` and either a `debit` or `credit` amount. Use `reports->list()` to retrieve available financial reports. Returns the created resource as an associative array. Throws `ValidationException` if the journal entry lines do not balance.
 
 ```php
 // Create a journal entry

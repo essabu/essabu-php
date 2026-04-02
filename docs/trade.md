@@ -4,6 +4,8 @@ The Trade module covers CRM (customers, contacts, opportunities, activities, cam
 
 ## Client Access
 
+Access the Trade module through the main Essabu client. The `$trade` property exposes all trade sub-APIs as magic properties. You must first initialize the SDK with a valid API key. Returns the `TradeClient` instance.
+
 ```php
 $essabu = new EssabuClient('your-api-key');
 $trade = $essabu->trade;
@@ -62,6 +64,8 @@ $trade = $essabu->trade;
 | `ReceiptApi` | `trade/receipts` |
 | `ActivityApi` | `trade/activities` |
 | `ReportApi` | `trade/reports` |
+
+Create a customer by providing `name`, `email`, and optionally `phone`. Create a sales order by linking it to a `customerId` and providing an array of line items with `productId`, `quantity`, and `unitPrice`. Use `stocks->list()` with a `PageRequest` to retrieve paginated stock levels. Create a delivery note tied to a `salesOrderId` with the items to ship. Returns each created resource as an associative array with a generated `id`. Throws `ValidationException` if required fields are missing, or a 422 error if stock is insufficient for a delivery.
 
 ```php
 // Create a customer
