@@ -1,6 +1,6 @@
 # Essabu PHP SDK
 
-Official PHP SDK for the Essabu platform. Provides unified access to HR, Accounting, Identity, Trade, Payment, E-Invoice, Project, and Asset modules with a Stripe-like fluent API.
+Official PHP SDK for the Essabu platform. Provides unified access to HR, Accounting, Identity, Trade, Payment, E-Invoice, Project, and Asset modules with a fluent API.
 
 ## Requirements
 
