@@ -1,0 +1,30 @@
+name: Code Style
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  php-cs-fixer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Check strict_types declarations
+        run: |
+          find src -name "*.php" | while read f; do
+            if ! head -5 "$f" | grep -q "declare(strict_types=1)"; then
+              echo "Missing declare(strict_types=1) in $f"
+              exit 1
+            fi
+          done
