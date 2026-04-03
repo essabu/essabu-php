@@ -7,6 +7,7 @@ namespace Essabu;
 use Essabu\Accounting\AccountingClient;
 use Essabu\Asset\AssetClient;
 use Essabu\Common\HttpClient;
+use Essabu\Compliance\ComplianceClient;
 use Essabu\EInvoice\EInvoiceClient;
 use Essabu\Hr\HrClient;
 use Essabu\Identity\IdentityClient;
@@ -30,6 +31,7 @@ use Essabu\Trade\TradeClient;
  * @property-read EInvoiceClient $eInvoice
  * @property-read ProjectClient $project
  * @property-read AssetClient $asset
+ * @property-read ComplianceClient $compliance
  */
 final class Essabu
 {
@@ -52,6 +54,7 @@ final class Essabu
             tenantId: $tenantId,
             baseUrl: (string) ($options['baseUrl'] ?? 'https://api.essabu.com'),
             timeout: (int) ($options['timeout'] ?? 30),
+            connectTimeout: (int) ($options['connectTimeout'] ?? 10),
             retries: (int) ($options['retries'] ?? 3),
             apiVersion: (string) ($options['apiVersion'] ?? 'v1'),
         );
@@ -74,6 +77,7 @@ final class Essabu
             'eInvoice' => new EInvoiceClient($this->httpClient),
             'project' => new ProjectClient($this->httpClient),
             'asset' => new AssetClient($this->httpClient),
+            'compliance' => new ComplianceClient($this->httpClient),
             default => throw new \InvalidArgumentException("Unknown module: {$name}"),
         };
 
