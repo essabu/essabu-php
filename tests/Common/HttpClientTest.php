@@ -6,6 +6,8 @@ namespace Essabu\Tests\Common;
 
 use Essabu\Common\Exception\AuthenticationException;
 use Essabu\Common\Exception\AuthorizationException;
+use Essabu\Common\Exception\BadRequestException;
+use Essabu\Common\Exception\ConflictException;
 use Essabu\Common\Exception\NotFoundException;
 use Essabu\Common\Exception\RateLimitException;
 use Essabu\Common\Exception\ServerException;
@@ -64,6 +66,32 @@ final class HttpClientTest extends TestCase
         $result = $client->delete('hr/employees/123');
 
         self::assertSame([], $result);
+    }
+
+    public function testMaps400ToBadRequestException(): void
+    {
+        $mock = new MockHandler([
+            new Response(400, [], json_encode(['message' => 'Invalid request body'])),
+        ]);
+
+        $client = $this->createClient($mock);
+
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Invalid request body');
+        $client->post('hr/employees', []);
+    }
+
+    public function testMaps409ToConflictException(): void
+    {
+        $mock = new MockHandler([
+            new Response(409, [], json_encode(['message' => 'Resource already exists'])),
+        ]);
+
+        $client = $this->createClient($mock);
+
+        $this->expectException(ConflictException::class);
+        $this->expectExceptionMessage('Resource already exists');
+        $client->post('hr/employees', ['email' => 'duplicate@test.com']);
     }
 
     public function testMaps401ToAuthenticationException(): void

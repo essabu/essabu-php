@@ -35,6 +35,7 @@ PHP 8.2+ with strict typing throughout.
   - [E-Invoice](#e-invoice)
   - [Project](#project)
   - [Asset](#asset)
+  - [Compliance](#compliance)
 - [Pagination](#pagination)
 - [Error Handling](#error-handling)
 - [Retry Behavior](#retry-behavior)
@@ -121,17 +122,19 @@ Customize the SDK behavior by passing an options array as the third constructor 
 
 ```php
 $essabu = new Essabu('api-key', 'tenant-id', [
-    'baseUrl'    => 'https://api.essabu.com',  // default
-    'timeout'    => 30,                          // seconds (default: 30)
-    'retries'    => 3,                           // retry count for 429/5xx (default: 3)
-    'apiVersion' => 'v1',                        // API version (default: v1)
+    'baseUrl'        => 'https://api.essabu.com',  // default
+    'timeout'        => 30,                          // read timeout in seconds (default: 30)
+    'connectTimeout' => 10,                          // connection timeout in seconds (default: 10)
+    'retries'        => 3,                           // retry count for 429/5xx (default: 3)
+    'apiVersion'     => 'v1',                        // API version (default: v1)
 ]);
 ```
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `baseUrl` | `string` | `https://api.essabu.com` | API base URL |
-| `timeout` | `int` | `30` | Request timeout in seconds |
+| `timeout` | `int` | `30` | Read timeout in seconds |
+| `connectTimeout` | `int` | `10` | Connection timeout in seconds |
 | `retries` | `int` | `3` | Max retries for 429/5xx errors |
 | `apiVersion` | `string` | `v1` | API version |
 
@@ -320,6 +323,18 @@ Plus: Resource Allocations.
 
 [Full reference on the Wiki](https://github.com/essabu/essabu-php/wiki/Asset-Module)
 
+### Compliance
+
+`$essabu->compliance` -- Audit, policy, and incident management.
+
+| Sub-API | Accessor | Highlights |
+|---------|----------|------------|
+| Audits | `->audits` | CRUD, start, complete, findings |
+| Policies | `->policies` | CRUD, publish, archive |
+| Incidents | `->incidents` | CRUD, resolve, escalate |
+
+[Full reference on the Wiki](https://github.com/essabu/essabu-php/wiki/Compliance-Module)
+
 ## Pagination
 
 Use `PageRequest` to control pagination, filtering, and sorting on any `list` method. Pass the page number, items per page, an optional search string, sort field, sort direction, and key-value filters. The returned `PageResponse` object contains `page`, `totalPages`, `totalItems`, and the `items` array. Throws `BadRequestException` if invalid filter keys are provided.
@@ -356,7 +371,7 @@ do {
         process($employee);
     }
     $page++;
-} while ($page <= $result->totalPages);
+} while ($result->hasNext());
 ```
 
 ## Error Handling
@@ -365,8 +380,10 @@ The SDK maps every HTTP error status to a specific exception class. Catch them f
 
 ```php
 use Essabu\Common\Exception\{
+    BadRequestException,
     AuthenticationException,
     AuthorizationException,
+    ConflictException,
     ValidationException,
     NotFoundException,
     RateLimitException,
@@ -376,6 +393,9 @@ use Essabu\Common\Exception\{
 
 try {
     $essabu->hr->employees->create([...]);
+} catch (BadRequestException $e) {
+    // 400 - Malformed request
+    echo $e->getMessage();
 } catch (ValidationException $e) {
     // 422 - Business rule violation
     echo $e->getMessage();
@@ -386,6 +406,8 @@ try {
     // 403 - Insufficient permissions
 } catch (NotFoundException $e) {
     // 404 - Resource not found
+} catch (ConflictException $e) {
+    // 409 - Resource conflict
 } catch (RateLimitException $e) {
     // 429 - Rate limit exceeded
     $retryAfter = $e->getRetryAfter(); // seconds
@@ -404,6 +426,7 @@ try {
 | `AuthenticationException` | 401 | Invalid or expired API key/token |
 | `AuthorizationException` | 403 | Insufficient permissions |
 | `NotFoundException` | 404 | Resource not found |
+| `ConflictException` | 409 | Resource conflict (duplicate) |
 | `ValidationException` | 422 | Business rule violation |
 | `RateLimitException` | 429 | Rate limit exceeded |
 | `ServerException` | 5xx | Server-side error |
@@ -438,11 +461,11 @@ class WebhookController extends Controller
 
         $event = EssabuWebhook::parse($payload);
 
-        match ($event['type']) {
-            'invoice.paid' => $this->handleInvoicePaid($event['data']),
-            'employee.created' => $this->handleEmployeeCreated($event['data']),
-            'payment_intent.confirmed' => $this->handlePaymentConfirmed($event['data']),
-            default => logger()->info("Unhandled event: {$event['type']}"),
+        match ($event->type) {
+            'invoice.paid' => $this->handleInvoicePaid($event->data),
+            'employee.created' => $this->handleEmployeeCreated($event->data),
+            'payment_intent.confirmed' => $this->handlePaymentConfirmed($event->data),
+            default => logger()->info("Unhandled event: {$event->type}"),
         };
 
         return response('OK', 200);
