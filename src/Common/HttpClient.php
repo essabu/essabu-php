@@ -6,6 +6,8 @@ namespace Essabu\Common;
 
 use Essabu\Common\Exception\AuthenticationException;
 use Essabu\Common\Exception\AuthorizationException;
+use Essabu\Common\Exception\BadRequestException;
+use Essabu\Common\Exception\ConflictException;
 use Essabu\Common\Exception\EssabuException;
 use Essabu\Common\Exception\NotFoundException;
 use Essabu\Common\Exception\RateLimitException;
@@ -43,7 +45,7 @@ final class HttpClient
         $this->client = new Client([
             'handler' => $stack,
             'timeout' => $config->timeout,
-            'connect_timeout' => 10,
+            'connect_timeout' => $config->connectTimeout,
             'http_errors' => true,
         ]);
     }
@@ -102,11 +104,24 @@ final class HttpClient
     public function upload(string $path, array $data): array
     {
         $multipart = [];
+        /** @var resource[] $openedResources */
+        $openedResources = [];
+
         foreach ($data as $key => $value) {
             if (is_resource($value) || (is_string($value) && file_exists($value))) {
+                if (is_string($value)) {
+                    $resource = fopen($value, 'r');
+                    if ($resource === false) {
+                        throw new EssabuException("Failed to open file: {$value}");
+                    }
+                    $openedResources[] = $resource;
+                    $contents = $resource;
+                } else {
+                    $contents = $value;
+                }
                 $multipart[] = [
                     'name' => $key,
-                    'contents' => is_resource($value) ? $value : fopen($value, 'r'),
+                    'contents' => $contents,
                 ];
             } else {
                 $multipart[] = [
@@ -129,6 +144,12 @@ final class HttpClient
             return $this->decodeResponse($response);
         } catch (ClientException | GuzzleServerException $e) {
             throw $this->mapException($e);
+        } finally {
+            foreach ($openedResources as $res) {
+                if (is_resource($res)) {
+                    fclose($res);
+                }
+            }
         }
     }
 
@@ -192,9 +213,11 @@ final class HttpClient
         $message = (string) ($data['message'] ?? $data['detail'] ?? $data['title'] ?? $e->getMessage());
 
         return match (true) {
+            $statusCode === 400 => new BadRequestException($message, $data),
             $statusCode === 401 => new AuthenticationException($message, $data),
             $statusCode === 403 => new AuthorizationException($message, $data),
             $statusCode === 404 => new NotFoundException($message, $data),
+            $statusCode === 409 => new ConflictException($message, $data),
             $statusCode === 422 => new ValidationException(
                 $message,
                 isset($data['violations']) && is_array($data['violations']) ? $data['violations'] : [],
