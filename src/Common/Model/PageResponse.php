@@ -38,4 +38,9 @@ final class PageResponse
             totalPages: $totalPages,
         );
     }
+
+    public function hasNext(): bool
+    {
+        return $this->page < $this->totalPages;
+    }
 }

@@ -11,6 +11,7 @@ final class EssabuConfig
         public readonly string $tenantId,
         public readonly string $baseUrl = 'https://api.essabu.com',
         public readonly int $timeout = 30,
+        public readonly int $connectTimeout = 10,
         public readonly int $retries = 3,
         public readonly string $apiVersion = 'v1',
     ) {
